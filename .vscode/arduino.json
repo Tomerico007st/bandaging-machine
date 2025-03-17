@@ -1,0 +1,17 @@
+{
+  "port": "",
+  "configuration": "",
+  "output": "build",
+  "board": "arduino:avr:unowifi",
+  "programmer": "",
+  "useProgrammer": false,
+  "configurationRequired": false,
+  "monitorPortSettings": {
+    "port": "",
+    "baudRate": 9600,
+    "lineEnding": "\r\n",
+    "dataBits": 8,
+    "parity": "none",
+    "stopBits": "one"
+  }
+}
