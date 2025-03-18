@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#line 1 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
 #include <AccelStepper.h>
 
 #define MOTOR1_STEP_PIN 2
@@ -13,6 +15,11 @@
 AccelStepper motor1(AccelStepper::DRIVER, MOTOR1_STEP_PIN, MOTOR1_DIR_PIN);
 AccelStepper motor2(AccelStepper::DRIVER, MOTOR2_STEP_PIN, MOTOR2_DIR_PIN);
 
+#line 16 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+void setup();
+#line 32 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+void loop();
+#line 16 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
 void setup() {
   pinMode(MOTOR1_ENABLE_PIN, OUTPUT);
   pinMode(MOTOR2_ENABLE_PIN, OUTPUT);

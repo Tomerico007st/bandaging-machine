@@ -1,0 +1,59 @@
+{
+  "configurations": [
+    {
+      "name": "Arduino",
+      "includePath": [
+        "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino/**",
+        "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard/**",
+        "C:\\Users\\david\\Documents\\Arduino\\libraries\\AccelStepper\\src/**",
+        "C:\\Users\\david\\Documents\\Arduino\\libraries/**",
+        "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine/**"
+      ],
+      "forcedInclude": [
+        "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino\\Arduino.h"
+      ],
+      "compilerPath": "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7/bin/avr-g++",
+      "compilerArgs": [
+        "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7/bin/avr-g++",
+        "-c",
+        "-g",
+        "-Os",
+        "-w",
+        "-std=gnu++11",
+        "-fpermissive",
+        "-fno-exceptions",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fno-threadsafe-statics",
+        "-Wno-error=narrowing",
+        "-MMD",
+        "-flto",
+        "-mmcu=atmega328p",
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_UNO_WIFI_DEV_ED",
+        "-DARDUINO_ARCH_AVR",
+        "-DESP_CH_UART",
+        "-DESP_CH_UART_BR=19200",
+        "-IC:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino",
+        "-IC:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
+        "-IC:\\Users\\david\\Documents\\Arduino\\libraries\\AccelStepper\\src",
+        "c:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp",
+        "-o",
+        "c:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp.o"
+      ],
+      "defines": [
+        "F_CPU=16000000L",
+        "ARDUINO=10607",
+        "ARDUINO_AVR_UNO_WIFI_DEV_ED",
+        "ARDUINO_ARCH_AVR",
+        "ESP_CH_UART",
+        "ESP_CH_UART_BR=19200",
+        "USBCON"
+      ],
+      "cStandard": "c17",
+      "cppStandard": "c++17"
+    }
+  ],
+  "version": 4
+}
