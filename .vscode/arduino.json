@@ -3,7 +3,7 @@
   "configuration": "",
   "output": "build",
   "board": "arduino:avr:unowifi",
-  "programmer": "",
+  "programmer": "Arduino as ISP",
   "useProgrammer": false,
   "configurationRequired": false,
   "monitorPortSettings": {
