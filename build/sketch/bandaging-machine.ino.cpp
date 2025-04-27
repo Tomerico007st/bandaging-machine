@@ -17,8 +17,14 @@ AccelStepper motor2(AccelStepper::DRIVER, MOTOR2_STEP_PIN, MOTOR2_DIR_PIN);
 
 #line 16 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
 void setup();
-#line 32 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+#line 26 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
 void loop();
+#line 38 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+void start();
+#line 43 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+void configur();
+#line 53 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
+void moveto(long moveto1, long moveto2);
 #line 16 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\bandaging-machine.ino"
 void setup() {
   pinMode(MOTOR1_ENABLE_PIN, OUTPUT);
@@ -27,6 +33,27 @@ void setup() {
   digitalWrite(MOTOR2_ENABLE_PIN, LOW);
 
 
+  configur;
+}
+
+void loop() {
+  start;
+
+  moveto(-motor1.currentPosition(), -motor2.currentPosition());
+  // if (motor1.distanceToGo() == 0) {
+  //   motor1.moveTo(-motor1.currentPosition());
+  // }
+  // if (motor2.distanceToGo() == 0) {
+  //   motor2.moveTo(-motor2.currentPosition());
+  // }
+}
+
+void start() {
+  motor1.run();
+  motor2.run();
+}
+
+void configur() {
   motor1.setMaxSpeed(1000);
   motor1.setAcceleration(1000);
   motor1.moveTo(STEPS_PER_REV);
@@ -36,14 +63,7 @@ void setup() {
   motor2.moveTo(STEPS_PER_REV);
 }
 
-void loop() {
-  motor1.run();
-  motor2.run();
-
-  if (motor1.distanceToGo() == 0) {
-    motor1.moveTo(-motor1.currentPosition());
-  }
-  if (motor2.distanceToGo() == 0) {
-    motor2.moveTo(-motor2.currentPosition());
-  }
+void moveto(long moveto1, long moveto2){
+  motor1.moveTo(moveto1);
+  motor2.moveTo(moveto2);
 }

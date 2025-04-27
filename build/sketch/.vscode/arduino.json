@@ -1,14 +1,14 @@
 #line 1 "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\.vscode\\arduino.json"
 {
-  "port": "",
+  "port": "COM4",
   "configuration": "",
   "output": "build",
   "board": "arduino:avr:unowifi",
-  "programmer": "",
+  "programmer": "Arduino as ISP",
   "useProgrammer": false,
   "configurationRequired": false,
   "monitorPortSettings": {
-    "port": "",
+    "port": "COM4",
     "baudRate": 9600,
     "lineEnding": "\r\n",
     "dataBits": 8,

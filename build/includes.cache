@@ -10,12 +10,12 @@
     "Includepath": "C:\\Users\\david\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard"
   },
   {
-    "Sourcefile": "c:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp",
+    "Sourcefile": "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp",
     "Include": "AccelStepper.h",
     "Includepath": "C:\\Users\\david\\Documents\\Arduino\\libraries\\AccelStepper\\src"
   },
   {
-    "Sourcefile": "c:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp",
+    "Sourcefile": "C:\\Users\\david\\OneDrive\\Desktop\\bandaging-machine\\build\\sketch\\bandaging-machine.ino.cpp",
     "Include": "",
     "Includepath": null
   },
