@@ -35,6 +35,13 @@ void setup() {
   matrix.begin();             // Start the matrix
   Serial.begin(9600);         // Open serial connection for debug logs
 
+    pinMode(MOTOR1_ENABLE_PIN, OUTPUT);
+  pinMode(MOTOR2_ENABLE_PIN, OUTPUT);
+  digitalWrite(MOTOR1_ENABLE_PIN, LOW);
+  digitalWrite(MOTOR2_ENABLE_PIN, LOW);
+
+  configur();
+
   // Attempt to connect to WiFi
   while (status != WL_CONNECTED) {
     Serial.print("Connecting to ");
@@ -42,6 +49,7 @@ void setup() {
     status = WiFi.begin(ssid, pass);   // Connect using SSID and password
     delay(1000);
   }
+
 
   // Connected!
   Serial.println("Connected to WiFi");
@@ -53,6 +61,7 @@ void setup() {
 
 // === LOOP ===
 void loop() {
+  start();
   // If checkboxState is true, show a pattern on the LED matrix
   if (checkboxState) {
     uint8_t frame[8][12] = {
@@ -66,11 +75,38 @@ void loop() {
       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
     matrix.renderBitmap(frame, 8, 12);   // Show the frame
+    moveto(motor1.currentPosition() -5  , motor2.currentPosition() -5 );
   } else {
     matrix.clear();    // Clear matrix if motor is off
+    motor1.stop();
+    motor2.stop();
   }
 
   wifiloop();  // Check for app requests and handle them
+}
+
+void start() {
+  motor1.run();
+  motor2.run();
+}
+
+void configur() {
+  motor1.setMaxSpeed(1000);
+  motor1.setAcceleration(1000);
+  motor1.moveTo(STEPS_PER_REV);
+
+  motor2.setMaxSpeed(1000);
+  motor2.setAcceleration(1000);
+  motor2.moveTo(STEPS_PER_REV);
+}
+
+void moveto(long moveto1, long moveto2){
+  if (motor1.distanceToGo() == 0) {
+    motor1.moveTo(moveto1);
+  }
+  if (motor2.distanceToGo() == 0) {
+    motor2.moveTo(moveto2);
+  }
 }
 
 // === WIFI HTTP REQUEST HANDLER ===
