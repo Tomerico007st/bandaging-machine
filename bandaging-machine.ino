@@ -3,19 +3,26 @@
 #include "Arduino_LED_Matrix.h"     // For displaying on built-in LED matrix
 
 // === Motor control pins ===
-#define MOTOR1_STEP_PIN 2
-#define MOTOR1_DIR_PIN 5
-#define MOTOR1_ENABLE_PIN 8
+#define MOTOREV_STEP_PIN 3
+#define MOTOREV_DIR_PIN 4
+#define MOTOREV_ENABLE_PIN 5
 
-#define MOTOR2_STEP_PIN 3
-#define MOTOR2_DIR_PIN 6
-#define MOTOR2_ENABLE_PIN 8
+#define MOTORLI_STEP_PIN 6
+#define MOTORLI_DIR_PIN 7
+#define MOTORLI_ENABLE_PIN 5  // Shared with Motor 1
 
 #define STEPS_PER_REV 800
 
+// Rotary Encoder Pins
+#define ENCODER_CLK A1
+#define ENCODER_DT A2
+
+// Proximity Sensor Pin
+#define PROXIMITY_PIN A3
+
 // === Stepper motor objects ===
-AccelStepper motor1(AccelStepper::DRIVER, MOTOR1_STEP_PIN, MOTOR1_DIR_PIN);
-AccelStepper motor2(AccelStepper::DRIVER, MOTOR2_STEP_PIN, MOTOR2_DIR_PIN);
+AccelStepper motorrev(AccelStepper::DRIVER, MOTOREV_STEP_PIN, MOTOREV_DIR_PIN);
+AccelStepper motorlli(AccelStepper::DRIVER, MOTORLI_STEP_PIN, MOTORLI_DIR_PIN);
 
 // === WiFi credentials ===
 char ssid[] = "Burgercat";     // Change to your network name
@@ -30,17 +37,32 @@ int status = WL_IDLE_STATUS;  // WiFi status tracking
 WiFiServer server(80);        // HTTP server on port 80
 ArduinoLEDMatrix matrix;      // LED matrix display object
 
+// Encoder state
+int lastEncoderState = 0;
+int encoderValue = 0;
+
+bool objectDetected = false;
+
+
+
 // === SETUP ===
 void setup() {
   matrix.begin();             // Start the matrix
   Serial.begin(9600);         // Open serial connection for debug logs
 
-    pinMode(MOTOR1_ENABLE_PIN, OUTPUT);
-  pinMode(MOTOR2_ENABLE_PIN, OUTPUT);
-  digitalWrite(MOTOR1_ENABLE_PIN, LOW);
-  digitalWrite(MOTOR2_ENABLE_PIN, LOW);
+    pinMode(MOTOREV_ENABLE_PIN, OUTPUT);
+  pinMode(MOTORLI_ENABLE_PIN, OUTPUT);
+  digitalWrite(MOTOREV_ENABLE_PIN, LOW);
+  digitalWrite(MOTORLI_ENABLE_PIN, LOW);
+
+    // Setup Encoder and Proximity
+  pinMode(ENCODER_CLK, INPUT);
+  pinMode(ENCODER_DT, INPUT);
+  pinMode(PROXIMITY_PIN, INPUT);
 
   configur();
+
+    lastEncoderState = digitalRead(ENCODER_CLK);
 
   // Attempt to connect to WiFi
   while (status != WL_CONNECTED) {
@@ -61,7 +83,9 @@ void setup() {
 
 // === LOOP ===
 void loop() {
+  sensors();
   start();
+  int currentState = digitalRead(ENCODER_CLK);
   // If checkboxState is true, show a pattern on the LED matrix
   if (checkboxState) {
     uint8_t frame[8][12] = {
@@ -75,37 +99,37 @@ void loop() {
       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
     matrix.renderBitmap(frame, 8, 12);   // Show the frame
-    moveto(motor1.currentPosition() -5  , motor2.currentPosition() -5 );
+    moveto(motorrev.currentPosition() -5  , motorlli.currentPosition() -5 );
   } else {
     matrix.clear();    // Clear matrix if motor is off
-    motor1.stop();
-    motor2.stop();
+    motorrev.stop();
+    motorlli.stop();
   }
 
   wifiloop();  // Check for app requests and handle them
 }
 
 void start() {
-  motor1.run();
-  motor2.run();
+  motorrev.run();
+  motorlli.run();
 }
 
 void configur() {
-  motor1.setMaxSpeed(1000);
-  motor1.setAcceleration(1000);
-  motor1.moveTo(STEPS_PER_REV);
+  motorrev.setMaxSpeed(1000);
+  motorrev.setAcceleration(1000);
+  motorrev.moveTo(STEPS_PER_REV);
 
-  motor2.setMaxSpeed(1000);
-  motor2.setAcceleration(1000);
-  motor2.moveTo(STEPS_PER_REV);
+  motorlli.setMaxSpeed(1000);
+  motorlli.setAcceleration(1000);
+  motorlli.moveTo(STEPS_PER_REV);
 }
 
-void moveto(long moveto1, long moveto2){
-  if (motor1.distanceToGo() == 0) {
-    motor1.moveTo(moveto1);
+void moveto(long rev, long li){
+  if (motorrev.distanceToGo() == 0) {
+    motorrev.moveTo(rev);
   }
-  if (motor2.distanceToGo() == 0) {
-    motor2.moveTo(moveto2);
+  if (motorlli.distanceToGo() == 0) {
+    motorlli.moveTo(li);
   }
 }
 
@@ -183,3 +207,24 @@ void wifiloop() {
     client.stop();   // Close connection
   }
 }
+
+void startCalibrate() {
+  
+}
+
+void sensors(){
+  // 🔄 Rotary Encoder Reading
+int currentState = digitalRead(ENCODER_CLK);
+if (currentState != lastEncoderState && currentState == HIGH) {
+  if (digitalRead(ENCODER_DT) != currentState) {
+    encoderValue++;
+  } else {
+    encoderValue--;
+  }
+}
+lastEncoderState = currentState;
+
+// 📡 Proximity Sensor Reading
+objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
+}
+
