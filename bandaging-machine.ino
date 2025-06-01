@@ -99,14 +99,14 @@ void StartWork(){
   bool workDone = false;
   if(!workDone) {
     if(moveforword){
-      if(motorlli.currentPosition > 7000) {
+      if(motorlli.currentPosition > 30000) {
          moveToto(motorrev.currentPosition +1, motorlli.currentPosition +1);
          int1Done++;
          moveforword = false;
       }
     }
     else{ 
-      if(objectDetected || int2S < motorlli.currentPosition <7000) {
+      if(objectDetected || int2S < motorlli.currentPosition <30000) {
          moveToto(motorrev.currentPosition -1, motorlli.currentPosition -1);
          int1Done++;
          moveforword true;
