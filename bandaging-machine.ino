@@ -1,12 +1,12 @@
 #include <AccelStepper.h>
 #include <WiFiS3.h> 
 
-#define MOTOREV_STEP_PIN 3
-#define MOTOREV_DIR_PIN 4
+#define MOTOREV_STEP_PIN 6
+#define MOTOREV_DIR_PIN 7
 #define MOTOREV_ENABLE_PIN 5
 
-#define MOTORLI_STEP_PIN 6
-#define MOTORLI_DIR_PIN 7
+#define MOTORLI_STEP_PIN 3
+#define MOTORLI_DIR_PIN 4
 #define MOTORLI_ENABLE_PIN 5
 
 #define STEPS_PER_REV 800
@@ -17,9 +17,10 @@ char pass[] = "12345678";
 // === State variables ===
 int int1 = 0;                  // Value 1 from app
 int int2 = 0;                  // Value 2 from app
-int int2S = int2 * 100;
+int int2S = 0;
 bool PowerOn = false;   // Controls motor on/off
 int status = WL_IDLE_STATUS;  // WiFi status tracking
+  bool workDone = false;
 
 int int1Done = 0;
 bool moveforword = true;
@@ -60,77 +61,85 @@ sensorSetUp();
 
 void loop() {
   int currentState = digitalRead(ENCODER_CLK);
-  sensorLoop();
-  sensorDIbug();
+  // sensorDIbug();
   motorWork();
-
-   lastEncoderState = 0;
-  if (encoderValue != lastEncoderState) {
-    Serial.print("Encoder Position: ");
-    Serial.println(encoderValue);
-    lastEncoderState = encoderValue;
-  }
-
-  if(PowerOn) {
+// 📡 Proximity Sensor Reading
+objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
   autoWIFI();
+  if(PowerOn) {
   digitalWrite(MOTOREV_ENABLE_PIN, LOW); // Enable motor
-  if(!homeDone) {
+  digitalWrite(MOTORLI_ENABLE_PIN, LOW);
+  if(homeDone == false) {
     HOME();
   }
-  if(int1 != 0){
+  if(int1 != 0 && homeDone == true){
     StartWork();
   }
   }
   else{
   digitalWrite(MOTOREV_ENABLE_PIN, HIGH); // Enable motor
+    digitalWrite(MOTORLI_ENABLE_PIN, HIGH);
+      int1Done = 0;
+  workDone = false;
+  homeDone = false;
     // digitalWrite(MOTOREV_ENABLE_PIN, LOW); // Enable motor
   }
 }
 
 
 void HOME() {
-  moveToto(motorrev.currentPosition -1,motorlli.currentPosition -1);
-  if(objectDetected){
-    moveToto(motorrev.currentPosition ,motorlli.currentPosition);
-    homeDone = true;
+  static bool searchingBack = true;
+
+  if (searchingBack) {
+    motorlli.moveTo(motorlli.currentPosition() + 100); // backward
+    if (objectDetected) {
+      searchingBack = false; // start forward phase
+    }
+  } else {
+    motorlli.moveTo(motorlli.currentPosition() - 100); // forward
+    if (!objectDetected) {
+      motorlli.setCurrentPosition(0);
+      homeDone = true;
+    }
   }
 }
 void StartWork(){
-  bool workDone = false;
-  if(!workDone) {
+  if(workDone == false ) {
     if(moveforword){
-      if(motorlli.currentPosition > 30000) {
-         moveToto(motorrev.currentPosition +1, motorlli.currentPosition +1);
+      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() -1600);
+      if(motorlli.currentPosition() <= -25000) {
          int1Done++;
          moveforword = false;
       }
     }
     else{ 
-      if(objectDetected || int2S < motorlli.currentPosition <30000) {
-         moveToto(motorrev.currentPosition -1, motorlli.currentPosition -1);
+      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() +1600);
+      if(objectDetected || (int2S < motorlli.currentPosition() && motorlli.currentPosition() < -25000)) {
          int1Done++;
-         moveforword true;
+         moveforword = true;
       }
     } 
   }
-  if(int1Done = int1){
+  if(int1Done == int1){
     workDone = true;
   }
 }
 
 
 
+
 void motorWork(){
   motorrev.run();
+  motorlli.run();
 }
 void config() {
-  motorrev.setMaxSpeed(1000);
-  motorrev.setAcceleration(1000);
+  motorrev.setMaxSpeed(3000);
+  motorrev.setAcceleration(3000);
   pinMode(MOTOREV_ENABLE_PIN, OUTPUT);
   digitalWrite(MOTOREV_ENABLE_PIN, LOW);
 
-  motorlli.setMaxSpeed(1000);
-  motorlli.setAcceleration(1000);
+  motorlli.setMaxSpeed(2000);
+  motorlli.setAcceleration(2000);
     pinMode(MOTORLI_ENABLE_PIN, OUTPUT);
     digitalWrite(MOTORLI_ENABLE_PIN, LOW);
   
@@ -143,14 +152,20 @@ void moveToto(long rev, long li){
     motorlli.moveTo(li);
   }
 }
+void moveToconstant(long rev, long li){
+    motorrev.moveTo(rev);
+    motorlli.moveTo(li);
+}
+
+
 
 void sensorSetUp() {
     // Setup Encoder and Proximity
   pinMode(ENCODER_CLK, INPUT);
   pinMode(ENCODER_DT, INPUT);
   // External 10k pull-ups already wired
-  attachInterrupt(digitalPinToInterrupt(ENCODER_CLK), updateEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_DT), updateEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_CLK), sensorLoop, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_DT), sensorLoop, CHANGE);
 
   pinMode(PROXIMITY_PIN, INPUT);
 }
@@ -158,26 +173,32 @@ void sensorLoop(){
   int MSB = digitalRead(ENCODER_CLK);
   int LSB = digitalRead(ENCODER_DT);
   int encoded = (MSB << 1) | LSB;
+  static int lastEncoded = 0;
   int sum = (lastEncoded << 2) | encoded;
 
-  // State machine logic to detect direction
-  if (sum == 0b1101  sum == 0b0100  sum == 0b0010  sum == 0b1011)
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011)
     encoderValue++;
-  if (sum == 0b1110  sum == 0b0111  sum == 0b0001  sum == 0b1000)
+  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000)
     encoderValue--;
 
-// 📡 Proximity Sensor Reading
-objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
+  lastEncoded = encoded;
 }
 void sensorDIbug() {
-    unsigned long currentMillis = millis();
-  if(currentMillis - lastTime >= interval){
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastTime >= interval) {
     lastTime = currentMillis;
 
-    Serial.println(objectDetected);
-  }
-  else{
-    Serial.println(encoderValue);
+    int pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
+    float gearRatio = 0.5;   // 20 -> 40
+    int adjustedSteps = encoderValue * gearRatio;
+    float degrees = fmod(adjustedSteps, pulsesPerRev) * (360.0 / pulsesPerRev);
+
+    Serial.print("Encoder: ");
+    Serial.print(encoderValue);
+    Serial.print(" | Proximity: ");
+    Serial.print(objectDetected ? "DETECTED" : "CLEAR");
+    Serial.print(" | Angle: ");
+    Serial.println(degrees);
   }
 }
 
@@ -229,6 +250,7 @@ void autoWIFI() {
   int val2Index = request.indexOf("val2=");
   if (val2Index >= 0) {
     int2 = request.substring(val2Index + 5).toInt();
+    int2S = -int2 * 100; // 100 steps = 1 cm, negative = forward direction
   }
 
   // Debug
