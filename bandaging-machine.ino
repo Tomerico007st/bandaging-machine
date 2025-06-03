@@ -34,6 +34,11 @@ AccelStepper motorlli(AccelStepper::DRIVER, MOTORLI_STEP_PIN, MOTORLI_DIR_PIN);
 unsigned long lastTime = 0;       // Last time the task was run
 const unsigned long interval = 5000; // 5000ms = 5 seconds
 
+WiFiClient bufferedClient;
+bool clientReady = false;
+unsigned long lastClientTime = 0;
+
+
 bool homeDone = false;
 
 // Rotary Encoder Pins
@@ -279,11 +284,21 @@ void autoWIFI() {
   Serial.println(int2);
 
   // Response
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
-  client.println("Connection: close");
-  client.println();
-  client.println("<html><body><h2>OK!</h2></body></html>");
-  client.stop();
+// Response with READY/BUSY status
+client.println("HTTP/1.1 200 OK");
+client.println("Content-Type: text/plain");
+client.println("Connection: close");
+client.println();
+
+if (motorrev.distanceToGo() == 0 && motorlli.distanceToGo() == 0) {
+  client.println("READY");  // ✅ app allowed to send
+} else {
+  client.println("BUSY");   // 🚫 app should wait
+}
+
+client.stop();
+WiFiClient dump = server.available(); // force clear
+(void)dump; // ignore it
+
   }
 }
