@@ -106,14 +106,14 @@ void HOME() {
 void StartWork(){
   if(workDone == false ) {
     if(moveforword){
-      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() -1600);
+syncMove(-16);  // means 16cm forward
       if(motorlli.currentPosition() <= -25000) {
          int1Done++;
          moveforword = false;
       }
     }
     else{ 
-      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() +1600);
+syncMove(16);  // 16cm backward
       if(objectDetected || (int2S < motorlli.currentPosition() && motorlli.currentPosition() < -25000)) {
          int1Done++;
          moveforword = true;
@@ -156,6 +156,23 @@ void moveToconstant(long rev, long li){
     motorrev.moveTo(rev);
     motorlli.moveTo(li);
 }
+void syncMove(float cm) {
+  long lilTarget = motorlli.currentPosition() + (cm * 100);
+
+  // Always forward REV motion (positive only)
+  float revSteps = (cm * 100) / 16.0;
+  if (revSteps < 0) revSteps *= -1;
+
+  long revTarget = motorrev.currentPosition() + revSteps;
+
+  // Clamp LIL travel
+  if (lilTarget < -25000) lilTarget = -25000;
+  if (lilTarget > 0) lilTarget = 0;
+
+  motorlli.moveTo(lilTarget);
+  motorrev.moveTo(revTarget);
+}
+
 
 
 
