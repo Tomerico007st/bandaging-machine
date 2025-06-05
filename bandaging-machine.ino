@@ -31,8 +31,18 @@ AccelStepper motorrev(AccelStepper::DRIVER, MOTOREV_STEP_PIN, MOTOREV_DIR_PIN);
 AccelStepper motorlli(AccelStepper::DRIVER, MOTORLI_STEP_PIN, MOTORLI_DIR_PIN);
 
 
+      int pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
+    float gearRatio = 0.5;   // 20 -> 40
+    int adjustedSteps = 0;
+    float degrees = 0;
+
 unsigned long lastTime = 0;       // Last time the task was run
 const unsigned long interval = 5000; // 5000ms = 5 seconds
+
+WiFiClient bufferedClient;
+bool clientReady = false;
+unsigned long lastClientTime = 0;
+
 
 bool homeDone = false;
 
@@ -106,23 +116,24 @@ void HOME() {
 void StartWork(){
   if(workDone == false ) {
     if(moveforword){
-      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() -1600);
+syncMove(-16);  // means 16cm forward
       if(motorlli.currentPosition() <= -25000) {
          int1Done++;
          moveforword = false;
       }
     }
     else{ 
-      moveToconstant(motorrev.currentPosition() -1600, motorlli.currentPosition() +1600);
+syncMove(16);  // 16cm backward
       if(objectDetected || (int2S < motorlli.currentPosition() && motorlli.currentPosition() < -25000)) {
          int1Done++;
          moveforword = true;
       }
     } 
   }
-  if(int1Done == int1){
-    workDone = true;
-  }
+if (int1Done == int1 && workDone == false) {
+  motorrev.stop();
+  workDone = true;
+}
 }
 
 
@@ -156,6 +167,23 @@ void moveToconstant(long rev, long li){
     motorrev.moveTo(rev);
     motorlli.moveTo(li);
 }
+void syncMove(float cm) {
+  long lilTarget = motorlli.currentPosition() + (cm * 100);
+
+  // Always forward REV motion (positive only)
+  float revSteps = (cm * 100) / 16.0;
+  if (revSteps < 0) revSteps *= -1;
+
+  long revTarget = motorrev.currentPosition() + revSteps;
+
+  // Clamp LIL travel
+  if (lilTarget < -25000) lilTarget = -25000;
+  if (lilTarget > 0) lilTarget = 0;
+
+  motorlli.moveTo(lilTarget);
+  motorrev.moveTo(revTarget);
+}
+
 
 
 
@@ -176,6 +204,11 @@ void sensorLoop(){
   static int lastEncoded = 0;
   int sum = (lastEncoded << 2) | encoded;
 
+       pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
+     gearRatio = 0.5;   // 20 -> 40
+     adjustedSteps = encoderValue * gearRatio;
+     degrees = fmod(adjustedSteps, pulsesPerRev) * (360.0 / pulsesPerRev);
+
   if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011)
     encoderValue++;
   if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000)
@@ -187,11 +220,6 @@ void sensorDIbug() {
   unsigned long currentMillis = millis();
   if (currentMillis - lastTime >= interval) {
     lastTime = currentMillis;
-
-    int pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
-    float gearRatio = 0.5;   // 20 -> 40
-    int adjustedSteps = encoderValue * gearRatio;
-    float degrees = fmod(adjustedSteps, pulsesPerRev) * (360.0 / pulsesPerRev);
 
     Serial.print("Encoder: ");
     Serial.print(encoderValue);
@@ -254,19 +282,29 @@ void autoWIFI() {
   }
 
   // Debug
-  Serial.print("PowerOn: ");
-  Serial.println(PowerOn);
-  Serial.print("int1: ");
-  Serial.println(int1);
-  Serial.print("int2: ");
-  Serial.println(int2);
+Serial.print("[WIFI] Power: ");
+Serial.print(PowerOn ? "ON" : "OFF");
+Serial.print(" | int1: ");
+Serial.print(int1);
+Serial.print(" | int2: ");
+Serial.println(int2);
 
   // Response
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
-  client.println("Connection: close");
-  client.println();
-  client.println("<html><body><h2>OK!</h2></body></html>");
-  client.stop();
+// Response with READY/BUSY status
+client.println("HTTP/1.1 200 OK");
+client.println("Content-Type: text/plain");
+client.println("Connection: close");
+client.println();
+
+if (motorrev.distanceToGo() == 0 && motorlli.distanceToGo() == 0) {
+  client.println("READY");  // ✅ app allowed to send
+} else {
+  client.println("BUSY");   // 🚫 app should wait
+}
+
+client.stop();
+WiFiClient dump = server.available(); // force clear
+(void)dump; // ignore it
+
   }
 }
