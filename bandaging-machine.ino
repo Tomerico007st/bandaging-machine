@@ -11,33 +11,32 @@
 
 #define STEPS_PER_REV 800
 
-char ssid[] = "Burgercat";     // Change to your network name
+char ssid[] = "Burgercat";     
 char pass[] = "12345678";
 
-// === State variables ===
-int int1 = 0;                  // Value 1 from app
-int int2 = 0;                  // Value 2 from app
+int int1 = 0;            
+int int2 = 0;                 
 int int2S = 0;
-bool PowerOn = false;   // Controls motor on/off
-int status = WL_IDLE_STATUS;  // WiFi status tracking
+bool PowerOn = false;   // motor on/off
+int status = WL_IDLE_STATUS;  // WiFi status 
   bool workDone = false;
 
 int int1Done = 0;
 bool moveforword = true;
 
-WiFiServer server(80);        // HTTP server on port 80
+WiFiServer server(80);    
 
 AccelStepper motorrev(AccelStepper::DRIVER, MOTOREV_STEP_PIN, MOTOREV_DIR_PIN);
 AccelStepper motorlli(AccelStepper::DRIVER, MOTORLI_STEP_PIN, MOTORLI_DIR_PIN);
 
 
-      int pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
+      int pulsesPerRev = 1440; // 360 PPR × 4 
     float gearRatio = 0.5;   // 20 -> 40
     int adjustedSteps = 0;
     float degrees = 0;
 
-unsigned long lastTime = 0;       // Last time the task was run
-const unsigned long interval = 5000; // 5000ms = 5 seconds
+unsigned long lastTime = 0;    
+const unsigned long interval = 5000; // 5000ms = 5s
 
 WiFiClient bufferedClient;
 bool clientReady = false;
@@ -73,11 +72,10 @@ void loop() {
   int currentState = digitalRead(ENCODER_CLK);
   // sensorDIbug();
   motorWork();
-// 📡 Proximity Sensor Reading
 objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
   autoWIFI();
   if(PowerOn) {
-  digitalWrite(MOTOREV_ENABLE_PIN, LOW); // Enable motor
+  digitalWrite(MOTOREV_ENABLE_PIN, LOW);
   digitalWrite(MOTORLI_ENABLE_PIN, LOW);
   if(homeDone == false) {
     HOME();
@@ -87,12 +85,12 @@ objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
   }
   }
   else{
-  digitalWrite(MOTOREV_ENABLE_PIN, HIGH); // Enable motor
+  digitalWrite(MOTOREV_ENABLE_PIN, HIGH);
     digitalWrite(MOTORLI_ENABLE_PIN, HIGH);
       int1Done = 0;
   workDone = false;
   homeDone = false;
-    // digitalWrite(MOTOREV_ENABLE_PIN, LOW); // Enable motor
+    // digitalWrite(MOTOREV_ENABLE_PIN, LOW); 
   }
 }
 
@@ -101,12 +99,12 @@ void HOME() {
   static bool searchingBack = true;
 
   if (searchingBack) {
-    motorlli.moveTo(motorlli.currentPosition() + 100); // backward
+    motorlli.moveTo(motorlli.currentPosition() + 100); 
     if (objectDetected) {
-      searchingBack = false; // start forward phase
+      searchingBack = false; // start forward
     }
   } else {
-    motorlli.moveTo(motorlli.currentPosition() - 100); // forward
+    motorlli.moveTo(motorlli.currentPosition() - 100); 
     if (!objectDetected) {
       motorlli.setCurrentPosition(0);
       homeDone = true;
@@ -116,14 +114,14 @@ void HOME() {
 void StartWork(){
   if(workDone == false ) {
     if(moveforword){
-syncMove(-16);  // means 16cm forward
+syncMove(-16);  
       if(motorlli.currentPosition() <= -25000) {
          int1Done++;
          moveforword = false;
       }
     }
     else{ 
-syncMove(16);  // 16cm backward
+syncMove(16); 
       if(objectDetected || (int2S < motorlli.currentPosition() && motorlli.currentPosition() < -25000)) {
          int1Done++;
          moveforword = true;
@@ -170,13 +168,11 @@ void moveToconstant(long rev, long li){
 void syncMove(float cm) {
   long lilTarget = motorlli.currentPosition() + (cm * 100);
 
-  // Always forward REV motion (positive only)
   float revSteps = (cm * 100) / 16.0;
   if (revSteps < 0) revSteps *= -1;
 
   long revTarget = motorrev.currentPosition() + revSteps;
 
-  // Clamp LIL travel
   if (lilTarget < -25000) lilTarget = -25000;
   if (lilTarget > 0) lilTarget = 0;
 
@@ -191,7 +187,6 @@ void sensorSetUp() {
     // Setup Encoder and Proximity
   pinMode(ENCODER_CLK, INPUT);
   pinMode(ENCODER_DT, INPUT);
-  // External 10k pull-ups already wired
   attachInterrupt(digitalPinToInterrupt(ENCODER_CLK), sensorLoop, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENCODER_DT), sensorLoop, CHANGE);
 
@@ -204,7 +199,7 @@ void sensorLoop(){
   static int lastEncoded = 0;
   int sum = (lastEncoded << 2) | encoded;
 
-       pulsesPerRev = 1440; // 360 PPR × 4 (if using interrupts)
+       pulsesPerRev = 1440; // 360 PPR × 4 
      gearRatio = 0.5;   // 20 -> 40
      adjustedSteps = encoderValue * gearRatio;
      degrees = fmod(adjustedSteps, pulsesPerRev) * (360.0 / pulsesPerRev);
@@ -236,11 +231,10 @@ void sensorDIbug() {
 
 void WIFIconfig(){
    unsigned long currentTime = millis();
-  // Attempt to connect to WiFi
   while (status != WL_CONNECTED) {
     Serial.print("Connecting to ");
     Serial.println(ssid);
-    status = WiFi.begin(ssid, pass);   // Connect using SSID and password
+    status = WiFi.begin(ssid, pass); 
   }
 
 
@@ -249,7 +243,7 @@ void WIFIconfig(){
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  server.begin();   // Start listening for HTTP clients
+  server.begin();   //start server
 }
 void autoWIFI() {
   unsigned long currentMillis = millis();
@@ -259,8 +253,8 @@ void autoWIFI() {
     WiFiClient client = server.available();
   if (!client) return;
 
-  String request = client.readStringUntil('\r'); // read first line only
-  client.flush(); // clean up the rest
+  String request = client.readStringUntil('\r');
+  client.flush(); 
 
    int motorIndex = request.indexOf("motor=");
   if (motorIndex >= 0) {
@@ -290,21 +284,19 @@ Serial.print(" | int2: ");
 Serial.println(int2);
 
   // Response
-// Response with READY/BUSY status
 client.println("HTTP/1.1 200 OK");
 client.println("Content-Type: text/plain");
 client.println("Connection: close");
 client.println();
 
 if (motorrev.distanceToGo() == 0 && motorlli.distanceToGo() == 0) {
-  client.println("READY");  // ✅ app allowed to send
+  client.println("READY");  
 } else {
-  client.println("BUSY");   // 🚫 app should wait
+  client.println("BUSY");  
 }
 
 client.stop();
-WiFiClient dump = server.available(); // force clear
-(void)dump; // ignore it
-
+WiFiClient dump = server.available(); 
+(void)dump; 
   }
 }
