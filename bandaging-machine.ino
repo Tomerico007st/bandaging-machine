@@ -83,11 +83,14 @@ objectDetected = digitalRead(PROXIMITY_PIN) == LOW;
   if(int1 != 0 && homeDone == true){
     StartWork();
   }
+  else if(int1 == 0 && int2 == 10){
+    moveToconstant(0 , motorlli.currentPosition() - 300);
+  }
   }
   else{
   digitalWrite(MOTOREV_ENABLE_PIN, HIGH);
     digitalWrite(MOTORLI_ENABLE_PIN, HIGH);
-      int1Done = 0;
+  int1Done = 0;
   workDone = false;
   homeDone = false;
     // digitalWrite(MOTOREV_ENABLE_PIN, LOW); 
